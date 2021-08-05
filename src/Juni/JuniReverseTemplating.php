@@ -78,16 +78,19 @@ class JuniReverseTemplating
         return '/' . $regexFromTemplate . '/';
     }
 
+    /**
+     * @phan-suppress PhanTypeMismatchArgumentInternal
+     */
     private function formRegexTemplateCallback(string $regexFromTemplate, string $regexVariable, string $tag): string
     {
         $count = 0;
 
         return preg_replace_callback(
             $this->formCallbackRegex($tag),
-            static function () use ($regexVariable, &$count) {
+            static function () use ($regexVariable, &$count): string {
                 $count++;
 
-                return sprintf('(?<%s%s>.*)', $regexVariable, $count);
+                return sprintf('(?<%s%d>.*)', $regexVariable, $count);
             },
             $regexFromTemplate
         );
@@ -98,9 +101,17 @@ class JuniReverseTemplating
      */
     private function formCallbackRegex(string $tag): string
     {
-        $formedTag = substr_replace($tag, '%s', strlen($tag) / 2, 0);
+        $tagWithSlash = '\\'.implode('\\', str_split($tag));
 
-        return '/' . sprintf(preg_quote(preg_quote($formedTag)), '\w+') . '/';
+        return '/' . $this->insertInTheMiddleOfTheLine(preg_quote($tagWithSlash), '\w+') . '/';
+    }
+
+    /**
+     * @phan-suppress PhanPartialTypeMismatchReturn
+     */
+    private function insertInTheMiddleOfTheLine(string $text, string $insertText): string
+    {
+        return substr_replace($text, $insertText, (int) (strlen($text) / 2), 0);
     }
 
     private function validateTemplate(string $rawTemplate): void
@@ -108,6 +119,10 @@ class JuniReverseTemplating
         preg_match_all(sprintf('/[%s]/', preg_quote($this->tag . $this->tagWithHtmlEscaped)), $rawTemplate, $matches);
 
         $tagsFromTemplate = reset($matches);
+
+        if ($tagsFromTemplate === false) {
+            return;
+        }
 
         if (count($tagsFromTemplate) % 2 === 1) {
             throw new InvalidTemplateException();
@@ -128,7 +143,7 @@ class JuniReverseTemplating
                 throw new InvalidTemplateException();
             }
 
-            if (strlen($variable) % 2 === 0 && in_array($variable, $tags)) {
+            if (strlen($variable) % 2 === 0 && in_array($variable, $tags, true)) {
                 $variable = '';
             }
         }
