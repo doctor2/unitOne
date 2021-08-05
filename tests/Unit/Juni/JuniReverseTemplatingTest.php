@@ -57,27 +57,27 @@ class JuniReverseTemplatingTest extends TestCase
             'success' => [
                 'Hello, my name is {{name}}.',
                 'Hello, my name is Juni.',
-                ['name' => 'Juni']
+                ['name' => 'Juni'],
             ],
             'success_when_empty' => [
                 'Hello, my name is {{name}}.',
                 'Hello, my name is .',
-                ['name' => '']
+                ['name' => ''],
             ],
             'success_without_escaped_symbols' => [
                 'Hello, my name is {name}.',
                 'Hello, my name is <robot>.',
-                ['name' => '<robot>']
+                ['name' => '<robot>'],
             ],
             'success_with_escaped_symbols' => [
                 'Hello, my name is {{name}}.',
                 'Hello, my name is &lt;robot&gt;.',
-                ['name' => '<robot>']
+                ['name' => '<robot>'],
             ],
             'success_with_multiple_tags' => [
                 'Hello, my name is {{name}}.{hi}, my name is {{nameSecond}}.',
                 'Hello, my name is &lt;robot&gt;.Hello, my name is Robert.',
-                ['name' => '<robot>', 'hi' => 'Hello', 'nameSecond' => 'Robert']
+                ['name' => '<robot>', 'hi' => 'Hello', 'nameSecond' => 'Robert'],
             ],
         ];
     }

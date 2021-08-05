@@ -19,6 +19,9 @@ class JuniReverseTemplating
         $this->tagWithHtmlEscaped = $tagWithHtmlEscaped;
     }
 
+    /**
+     * @return string[]
+     */
     public function parseVariables(string $rawTemplate, string $processedTemplate): array
     {
         $this->validateTemplate($rawTemplate);
@@ -32,41 +35,47 @@ class JuniReverseTemplating
         preg_match_all($regexFromTemplate, $rawTemplate, $matchesNames);
 
         return array_merge(
-            $this->getRawVariables($matchesValues, $matchesNames),
-            $this->getVariablesWithHtmlEscaped($matchesValues, $matchesNames)
+            $this->getVariablesByMatchesNamesAndValues($matchesValues, $matchesNames, self::RAW_VARIABLE_NAME, $this->tag),
+            $this->htmlDecodeVariables(
+                $this->getVariablesByMatchesNamesAndValues($matchesValues, $matchesNames, self::HTML_ESCAPED_VARIABLE_NAME, $this->tagWithHtmlEscaped)
+            ),
         );
     }
 
-    private function getRawVariables(array $matchesValues, array $matchesNames): array
+    /**
+     * @param mixed[] $matchesValues
+     * @param mixed[] $matchesNames
+     *
+     * @return string[]
+     */
+    private function getVariablesByMatchesNamesAndValues(array $matchesValues, array $matchesNames, string $variableName, string $tag): array
     {
         $variables = [];
 
-        foreach ($matchesValues as $key => $value) {
-            if (strpos($key, self::RAW_VARIABLE_NAME) === false) {
-                continue;
+        for ($i = 1; $i < count($matchesValues); $i++) {
+            $key = $variableName . $i;
+
+            if (!isset($matchesValues[$key])) {
+                break;
             }
 
-            $name = trim($matchesNames[$key][0], $this->tag);
-            $variables[$name] = $value[0];
+            $name = trim($matchesNames[$key][0], $tag);
+            $variables[$name] = $matchesValues[$key][0];
         }
 
         return $variables;
     }
 
-    private function getVariablesWithHtmlEscaped(array $matchesValues, array $matchesNames): array
+    /**
+     * @param string[] $variables
+     *
+     * @return string[]
+     */
+    private function htmlDecodeVariables(array $variables): array
     {
-        $variables = [];
-
-        foreach ($matchesValues as $key => $value) {
-            if (strpos($key, self::HTML_ESCAPED_VARIABLE_NAME) === false) {
-                continue;
-            }
-
-            $name = trim($matchesNames[$key][0], $this->tagWithHtmlEscaped);
-            $variables[$name] = htmlspecialchars_decode($value[0]);
-        }
-
-        return $variables;
+        return array_map(function ($value) {
+            return htmlspecialchars_decode($value);
+        }, $variables);
     }
 
     private function formRegexFromTemplate(string $rawTemplate): string
@@ -144,6 +153,9 @@ class JuniReverseTemplating
         $this->validateRightTagPosition($tagsFromTemplate);
     }
 
+    /**
+     * @param string[] $tagsFromTemplate
+     */
     private function validateRightTagPosition(array $tagsFromTemplate): void
     {
         $variable = '';
