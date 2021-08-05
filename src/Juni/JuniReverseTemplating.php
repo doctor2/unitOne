@@ -23,13 +23,13 @@ class JuniReverseTemplating
     {
         $this->validateTemplate($rawTemplate);
 
-        $regexTemplate = $this->formRegexTemplate($rawTemplate);
+        $regexFromTemplate = $this->formRegexFromTemplate($rawTemplate);
 
-        if (!preg_match_all($regexTemplate, $processedTemplate, $matchesValues)) {
+        if (!preg_match_all($regexFromTemplate, $processedTemplate, $matchesValues)) {
             throw new ResultTemplateMismatchException();
         }
 
-        preg_match_all($regexTemplate, $rawTemplate, $matchesNames);
+        preg_match_all($regexFromTemplate, $rawTemplate, $matchesNames);
 
         return array_merge(
             $this->getRawVariables($matchesValues, $matchesNames),
@@ -69,7 +69,7 @@ class JuniReverseTemplating
         return $variables;
     }
 
-    private function formRegexTemplate(string $rawTemplate): string
+    private function formRegexFromTemplate(string $rawTemplate): string
     {
         $longTag = [
             'name' => self::RAW_VARIABLE_NAME,
@@ -84,9 +84,9 @@ class JuniReverseTemplating
             [$longTag, $shortTag] = [$shortTag, $longTag];
         }
 
-        $regexFromTemplate = $this->formRegexTemplateCallback(preg_quote($rawTemplate), $longTag['name'], $longTag['tag']);
+        $regexFromTemplate = $this->replaceTemplateTagToRegexWithVariable(preg_quote($rawTemplate), $longTag['name'], $longTag['tag']);
 
-        $regexFromTemplate = $this->formRegexTemplateCallback($regexFromTemplate, $shortTag['name'], $shortTag['tag']);
+        $regexFromTemplate = $this->replaceTemplateTagToRegexWithVariable($regexFromTemplate, $shortTag['name'], $shortTag['tag']);
 
         return '/' . $regexFromTemplate . '/';
     }
@@ -94,7 +94,7 @@ class JuniReverseTemplating
     /**
      * @phan-suppress PhanTypeMismatchArgumentInternal
      */
-    private function formRegexTemplateCallback(string $regexFromTemplate, string $regexVariable, string $tag): string
+    private function replaceTemplateTagToRegexWithVariable(string $regexFromTemplate, string $regexVariable, string $tag): string
     {
         $count = 0;
 
