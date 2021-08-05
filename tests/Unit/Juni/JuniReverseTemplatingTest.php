@@ -19,24 +19,17 @@ class JuniReverseTemplatingTest extends TestCase
         $juniReverseTemplating->parseVariables('Hello, my name is {{name}}.', 'Hello, my lastname is Juni.');
     }
 
-    public function testInvalidTemplate(): void
+    /**
+     * @dataProvider getInvalidTemplates
+     */
+    public function testInvalidTemplate(string $rawTemplate, string $processedTemplate): void
     {
         $this->expectException(InvalidTemplateException::class);
         $this->expectExceptionMessage('Invalid template.');
 
         $juniReverseTemplating = new JuniReverseTemplating();
 
-        $juniReverseTemplating->parseVariables('Hello, my name is {name{}.', 'Hello, my name is Juni.');
-    }
-
-    public function testInvalidTemplateWithWrongPosition(): void
-    {
-        $this->expectException(InvalidTemplateException::class);
-        $this->expectExceptionMessage('Invalid template.');
-
-        $juniReverseTemplating = new JuniReverseTemplating();
-
-        $juniReverseTemplating->parseVariables('Hello, my name is }{name{}.', 'Hello, my name is Juni.');
+        $juniReverseTemplating->parseVariables($rawTemplate, $processedTemplate);
     }
 
     /**
@@ -78,6 +71,28 @@ class JuniReverseTemplatingTest extends TestCase
                 'Hello, my name is {{name}}.{hi}, my name is {{nameSecond}}.',
                 'Hello, my name is &lt;robot&gt;.Hello, my name is Robert.',
                 ['name' => '<robot>', 'hi' => 'Hello', 'nameSecond' => 'Robert'],
+            ],
+        ];
+    }
+
+    public function getInvalidTemplates(): array
+    {
+        return [
+            'invalid_by_number_of_tag' => [
+                'Hello, my name is {name{}.',
+                'Hello, my name is Juni.'
+            ],
+            'invalid_by_tag_position' => [
+                'Hello, my name is }{name{}.',
+                'Hello, my name is Juni.'
+            ],
+            'invalid_by_tag_position_1' => [
+                'Hello, my name is }name}.',
+                'Hello, my name is Juni.'
+            ],
+            'invalid_by_tag_position_2' => [
+                'Hello, my name is }name{.',
+                'Hello, my name is Juni.'
             ],
         ];
     }

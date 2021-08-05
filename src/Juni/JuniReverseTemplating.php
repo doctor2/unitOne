@@ -164,7 +164,7 @@ class JuniReverseTemplating
         foreach ($tagsFromTemplate as $tag) {
             $variable .= $tag;
 
-            if (strpos($this->tag, $variable) === false && strpos($this->tagWithHtmlEscaped, $variable) === false) {
+            if (strpos($this->tag, $variable) !== 0 && strpos($this->tagWithHtmlEscaped, $variable) !== 0) {
                 throw new InvalidTemplateException();
             }
 
