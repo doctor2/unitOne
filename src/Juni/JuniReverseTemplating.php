@@ -71,9 +71,22 @@ class JuniReverseTemplating
 
     private function formRegexTemplate(string $rawTemplate): string
     {
-        $regexFromTemplate = $this->formRegexTemplateCallback(preg_quote($rawTemplate), self::HTML_ESCAPED_VARIABLE_NAME, $this->tagWithHtmlEscaped);
+        $longTag = [
+            'name' => self::RAW_VARIABLE_NAME,
+            'tag' => $this->tag,
+        ];
+        $shortTag = [
+            'name' => self::HTML_ESCAPED_VARIABLE_NAME,
+            'tag' => $this->tagWithHtmlEscaped,
+        ];
 
-        $regexFromTemplate = $this->formRegexTemplateCallback($regexFromTemplate, self::RAW_VARIABLE_NAME, $this->tag);
+        if (strlen($this->tagWithHtmlEscaped) > strlen($this->tag)) {
+            [$longTag, $shortTag] = [$shortTag, $longTag];
+        }
+
+        $regexFromTemplate = $this->formRegexTemplateCallback(preg_quote($rawTemplate), $longTag['name'], $longTag['tag']);
+
+        $regexFromTemplate = $this->formRegexTemplateCallback($regexFromTemplate, $shortTag['name'], $shortTag['tag']);
 
         return '/' . $regexFromTemplate . '/';
     }
@@ -101,7 +114,7 @@ class JuniReverseTemplating
      */
     private function formCallbackRegex(string $tag): string
     {
-        $tagWithSlash = '\\'.implode('\\', str_split($tag));
+        $tagWithSlash = '\\' . implode('\\', str_split($tag));
 
         return '/' . $this->insertInTheMiddleOfTheLine(preg_quote($tagWithSlash), '\w+') . '/';
     }
